@@ -42,7 +42,7 @@ typedef struct
 
 typedef struct nodoListaJugadorEquipo
 {
-    stJugadorEquipo jugador;
+    stJugadorEquipo jugador; /// a fines de recolectar toda la informacion de un jugador, la lista de goleadores tendra la data del equipo
     struct nodoListaJugadorEquipo* siguiente;
 } nodoListaJugadorEquipo;
 
@@ -108,7 +108,7 @@ nodoEquipo* insertarAlFinal( nodoEquipo* lista, stEquipo equipo)
 }
 
 /// Función para buscar un nodo por "dato" en el árbol de forma recursiva
-nodoJugador* buscarJugadorPorCamiseta(nodoJugador* A, int nroCamiseta)
+nodoJugador* buscarJugadorPorCamiseta(nodoJugador* A, int nroCamiseta) /// modifique esta funcion para buscar por camiseta en todo el arbol, no se beneficia de la busqueda binaria
 {
     nodoJugador* jugador = NULL;
     if(A)
@@ -138,6 +138,7 @@ nodoJugador* buscarJugadorPorCamiseta(nodoJugador* A, int nroCamiseta)
 }
 
 /// 1
+/// se encarga de buscar un equipo, por nombre, en la lsita de equipos
 nodoEquipo* buscarEquipo(nodoEquipo* seg, char* nombreEquipo)
 {
     while (seg && strcmpi(seg->equipos.nombreEquipo, nombreEquipo) != 0)
@@ -147,27 +148,29 @@ nodoEquipo* buscarEquipo(nodoEquipo* seg, char* nombreEquipo)
     return seg;
 }
 
+/// recibe la lista de equipos y un registro
 nodoEquipo* alta(nodoEquipo* lista, stJugadorEquipo registro)
 {
-    nodoEquipo* equipo = buscarEquipo(lista, registro.nombreEquipo);
-    stJugador jugador;
+    nodoEquipo* equipo = buscarEquipo(lista, registro.nombreEquipo); // busca el equipo
+    stJugador jugador; // todos estos datos los podemos recolectar aca y son necesarios para agregar un jugador
     jugador.IdJugador = registro.IdJugador;
     strcpy(jugador.nombreJugador, registro.nombreJugador);
     jugador.NroCamisetaJugador = registro.NroCamisetaJugador;
     jugador.PuntosAnotados = registro.PuntosAnotados;
 
-    if(equipo == NULL)
+    if(equipo == NULL) // si no existe el equipo
     {
         stEquipo nuevoEquipo;
         nuevoEquipo.idEquipo = registro.idEquipo;
         strcpy(nuevoEquipo.nombreEquipo, registro.nombreEquipo);
-        lista = insertarAlFinal(lista, nuevoEquipo);
-        equipo = buscarEquipo(lista, nuevoEquipo.nombreEquipo);
+        lista = insertarAlFinal(lista, nuevoEquipo); // se crea y se agrega el equipo a la lista
+        equipo = buscarEquipo(lista, nuevoEquipo.nombreEquipo); // esto no seria necesario si los equipos se insertaran al principio
     }
     equipo->jugadores = insertarEnArbol(equipo->jugadores, jugador);
     return lista;
 }
 
+/// abre el archivo y desglosa los registros en la lista de arboles
 nodoEquipo* leerArchivo(char* nombreArchivo)
 {
     nodoEquipo* lista = NULL;
@@ -186,9 +189,9 @@ nodoEquipo* leerArchivo(char* nombreArchivo)
 /// fin 1
 
 /// 2
-int ultimoIdEquipo(nodoEquipo* lista)
+int ultimoIdEquipo(nodoEquipo* lista) // existe para prevenir que el usuario ingrese ids
 {
-    int id = 0;
+    int id = 0; // el id 0 no existe, lo considero invalido
     while (lista)
     {
         if (lista->equipos.idEquipo > id)
@@ -200,9 +203,9 @@ int ultimoIdEquipo(nodoEquipo* lista)
     return id;
 }
 
-int ultimoIdJugadorDeUnEquipo(nodoJugador* arbol)
+int ultimoIdJugadorDeUnEquipo(nodoJugador* arbol) // auxiliar a la siguiente funcion
 {
-    int id = 0;
+    int id = 0; // el id 0 no existe, lo considero invalido
     if(arbol)
     {
         if (arbol->der)
@@ -217,24 +220,24 @@ int ultimoIdJugadorDeUnEquipo(nodoJugador* arbol)
     return id;
 }
 
-int ultimoIdJugador(nodoEquipo* equipos)
+int ultimoIdJugador(nodoEquipo* equipos) // existe para prevenir que el usuario ingrese ids
 {
-    int id = 0;
+    int ultimoID = 0;
     if (equipos)
     {
-        id = ultimoIdJugadorDeUnEquipo(equipos->jugadores);
+        ultimoID = ultimoIdJugadorDeUnEquipo(equipos->jugadores); // el ultimo id del primer equipo, mi primer supuesto para comparar
         equipos = equipos->siguiente;
         while (equipos)
         {
-            int otroID = ultimoIdJugadorDeUnEquipo(equipos->jugadores);
-            if(otroID > id)
+            int otroID = ultimoIdJugadorDeUnEquipo(equipos->jugadores); // el ultimo id de otro equipo
+            if(otroID > ultimoID) // cual es realmente el ultimo?
             {
-                id = otroID;
+                ultimoID = otroID;
             }
             equipos = equipos->siguiente;
         }
     }
-    return id;
+    return ultimoID; // el ultimo id o 0 si la lista esta vacia
 }
 
 nodoEquipo* altaInput(nodoEquipo* lista)
@@ -242,7 +245,7 @@ nodoEquipo* altaInput(nodoEquipo* lista)
     stJugadorEquipo registro;
     registro.IdJugador = ultimoIdJugador(lista) + 1;
     registro.idEquipo = ultimoIdEquipo(lista) + 1; // si el equipo existe no importa porque no crea un nuevo equipo
-    registro.PuntosAnotados = 0;
+    registro.PuntosAnotados = 0; // un inicializador, si se da de alta a un jugador con puntaje existente, deberia pedirse por input
     printf("ingrese el nombre del nuevo jugador\n");
     fflush(stdin);
     gets(registro.nombreJugador);
@@ -258,7 +261,7 @@ nodoEquipo* altaInput(nodoEquipo* lista)
 /// fin 2
 
 /// 3
-void mostrarJugadores(nodoJugador* arbol)
+void mostrarJugadores(nodoJugador* arbol) /// preorder
 {
     if (arbol)
     {
@@ -271,7 +274,7 @@ void mostrarJugadores(nodoJugador* arbol)
     }
 }
 
-void mostrarEquiposYJugadores(nodoEquipo* lista)
+void mostrarEquiposYJugadores(nodoEquipo* lista) /// muestra el nombre del equipo y todos sus jugadores
 {
     while (lista)
     {
@@ -283,19 +286,19 @@ void mostrarEquiposYJugadores(nodoEquipo* lista)
 /// fin 3
 
 /// 4
-int buscarMayorCantDeGoles(nodoJugador* arbol)
+int buscarMayorCantDeGoles(nodoJugador* arbol) /// busca la mayor cantidad de goles de entre los jugadores del arbol
 {
-    int goles = -1;
-    if(arbol)
+    int goles = -1; /// como minimo es 0, por tanto -1 es invalido y será pisado a menos que no hayan jugadores
+    if(arbol) /// como hay que buscar en todo el arbol no hay ningun beneficio por hacerlo en preorder, inorder o posorder
     {
         int golesIzq = buscarMayorCantDeGoles(arbol->izq);
         int golesDer = buscarMayorCantDeGoles(arbol->der);
 
-        if(arbol->jugador.PuntosAnotados > golesIzq && arbol->jugador.PuntosAnotados > golesDer)
+        if(arbol->jugador.PuntosAnotados > golesIzq && arbol->jugador.PuntosAnotados > golesDer) /// primero descarto si raiz tiene el mayor dato
         {
             goles = arbol->jugador.PuntosAnotados;
         }
-        else if (golesIzq > golesDer)
+        else if (golesIzq > golesDer) /// sino comparo los datos que provienen de las ramas
         {
             goles = golesIzq;
         }
@@ -307,6 +310,7 @@ int buscarMayorCantDeGoles(nodoJugador* arbol)
     return goles;
 }
 
+/// funcion auxiliar para no repetir tantas asignaciones y copias
 stJugadorEquipo generarRegistro(stEquipo equipo, stJugador jugador)
 {
     stJugadorEquipo nuevo;
@@ -320,7 +324,7 @@ stJugadorEquipo generarRegistro(stEquipo equipo, stJugador jugador)
 }
 
 nodoListaJugadorEquipo* pasarGoleadoresDeUnEquipoALista(nodoListaJugadorEquipo* lista, nodoJugador* arbol, int mayorCantDeGoles, stEquipo equipo)
-{
+{ /// funcion auxiliar que recorre cada arbol
     if(arbol)
     {
         lista = pasarGoleadoresDeUnEquipoALista(lista,arbol->izq,mayorCantDeGoles,equipo);
@@ -337,7 +341,7 @@ nodoListaJugadorEquipo* pasarGoleadoresDeUnEquipoALista(nodoListaJugadorEquipo* 
 }
 
 nodoListaJugadorEquipo* pasarGoleadoresALista(nodoEquipo* lista)
-{
+{ /// por cada equipo pasara a la lista los jugadores con mas goles de cada equipo
     nodoListaJugadorEquipo* goleadores = NULL;
     while (lista)
     {
@@ -385,13 +389,13 @@ void listarGoleadores(nodoJugador* arbol, int mayorCantDeGoles)
 
 void informarEstadisticasPorEquipo(nodoEquipo* lista)
 {
-    while (lista)
+    while (lista) // por cada equipo
     {
-        int mayorCantDeGoles = buscarMayorCantDeGoles(lista->jugadores);
-        int totalDeGoles = sumaGoles(lista->jugadores);
-        int totalDeJugadores = contarJugadores(lista->jugadores);
-        float promedioDeGoles = (float)totalDeGoles / totalDeJugadores;
-        printf("Equipo: %s\n\n", lista->equipos.nombreEquipo);
+        int mayorCantDeGoles = buscarMayorCantDeGoles(lista->jugadores); // capturo la mayor cantidad de goles de todos los jugadores
+        int totalDeGoles = sumaGoles(lista->jugadores); // capturo el total de goles
+        int totalDeJugadores = contarJugadores(lista->jugadores); // capturo el total de jugadores
+        float promedioDeGoles = (float)totalDeGoles / totalDeJugadores; // calculo el promedio de goles
+        printf("Equipo: %s\n\n", lista->equipos.nombreEquipo); // e informo estadisticas
         printf("Total de goles: %d\n", totalDeGoles);
         printf("Promedio de goles: %.2f\n", promedioDeGoles);
         printf("Goleadores: ");
@@ -405,7 +409,7 @@ void informarEstadisticasPorEquipo(nodoEquipo* lista)
 /// 6
 void pasarJugadoresDeUnaCamisetaAUnArchivo(char* nombreArchivo, nodoEquipo* lista, int nroCamiseta)
 {
-    FILE* fp = fopen(nombreArchivo, "wb");
+    FILE* fp = fopen(nombreArchivo, "wb"); // wb para que el archivo siempre este actualizado
     if(fp)
     {
         while (lista)
@@ -441,6 +445,9 @@ void mostrarArchivo(char* nombreArchivo)
         fclose(fp);
     }
 }
+
+/// se podria haber modularizado? si...
+/// son mas de debug que otra cosa
 
 void mostrarListaDeGoleadores(nodoListaJugadorEquipo* goleadores)
 {
