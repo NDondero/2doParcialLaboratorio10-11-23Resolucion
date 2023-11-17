@@ -1,0 +1,97 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+typedef struct 
+{
+    int idEquipo;
+    char nombreEquipo[30];
+} stEquipo;
+
+typedef struct 
+{
+    int IdJugador;
+    int NroCamisetaJugador;
+    char nombreJugador[30];
+    int PuntosAnotados;
+} stJugador;
+
+
+///======================================================================================
+
+int main()
+{
+
+    return 0;
+}
+
+///======================================================================================
+
+///Crear Nodo
+nodoA* crearnodoArbol(int dato)
+{
+    nodoA* nuevo= (nodoA*)malloc(sizeof(nodoA));
+    nuevo->dato=dato;
+    nuevo->izq=NULL;
+    nuevo->der=NULL;
+    return nuevo;
+}
+
+/// Función para insertar un nodo en el arbol
+nodoA* insertarEnArbol(nodoA* A, int dato)
+{
+    if (A == NULL)
+    {
+        return crearnodoArbol(dato);
+    }
+
+    if (dato < A->dato)
+    {
+        A->izq = insertarEnArbol(A->izq, dato);
+    }
+    else if (dato > A->dato)
+    {
+        A->der = insertarEnArbol(A->der, dato);
+    }
+
+    return A;
+}
+
+/// Función para insertar un nodo al final de la lista
+NodoLista* insertarAlFinal( NodoLista* lista, int valor)
+{
+    NodoLista* nuevoNodo = (NodoLista*)malloc(sizeof(NodoLista));
+    nuevoNodo->valor = valor;
+    nuevoNodo->siguiente = NULL;
+
+    if (lista == NULL)
+    {
+        return nuevoNodo;
+    }
+
+    NodoLista* actual = lista;
+    while (actual->siguiente != NULL)
+    {
+        actual = actual->siguiente;
+    }
+
+    actual->siguiente = nuevoNodo;
+    return lista;
+}
+
+/// Función para buscar un nodo por "dato" en el árbol de forma recursiva
+nodoA* buscarNodoPorDato(nodoA* A, int dato)
+{
+    if (A == NULL || A->dato == dato)
+    {
+        return A;
+    }
+
+    if (dato < A->dato)
+    {
+        return buscarNodoPorDato(A->izq, dato);
+    }
+    else
+    {
+        return buscarNodoPorDato(A->der, dato);
+    }
+}
